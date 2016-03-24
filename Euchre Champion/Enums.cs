@@ -1,7 +1,7 @@
 ﻿namespace EuchreChampion
 {
     public enum Suit
-    {
+    {        
         Clubs,
         Diamonds,
         Hearts,
@@ -41,6 +41,7 @@
         Dealing,
         Dealt,
         CallingTrump,
+        ChoosingCard,
         TrumpCalled,
         HandOver
     }

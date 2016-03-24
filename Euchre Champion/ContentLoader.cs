@@ -35,19 +35,9 @@ namespace EuchreChampion
             return cards;
         }
 
-        public Texture2D LoadTitle()
+        public SpriteFont LoadFont()
         {
-            return _content.Load<Texture2D>("EuchreChampion-title");
-        }
-
-        public List<SpriteFont> LoadFonts()
-        {
-            var fonts = new List<SpriteFont>();
-
-            fonts.Add(_content.Load<SpriteFont>("Gabrielle"));
-            fonts.Add(_content.Load<SpriteFont>("Consolas"));
-
-            return fonts;
+            return _content.Load<SpriteFont>("Consolas");
         }
     }
 }

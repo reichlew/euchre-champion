@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Linq;
-using Microsoft.Xna.Framework.Input.Touch;
 
 namespace EuchreChampion
 {
@@ -50,17 +47,15 @@ namespace EuchreChampion
             var spriteBatch = new SpriteBatch(_graphics.GraphicsDevice);            
 
             var loader = new ContentLoader(Content);
+            var font = loader.LoadFont();
             var cards = loader.LoadCards();
 
             var factory = new PlayerFactory();
             var players = factory.GetPlayers();
 
-            var board = new Board(_graphics.GraphicsDevice.Viewport);
+            var board = new Board(_graphics.GraphicsDevice.Viewport);            
 
-            var title = loader.LoadTitle();
-            var fonts = loader.LoadFonts();
-
-            _game = new GameManager(spriteBatch, cards, players, board, title, fonts, _inputManager);     
+            _game = new GameManager(spriteBatch, cards, players, board, font, _inputManager);     
         }
 
         /// <summary>

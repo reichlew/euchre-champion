@@ -17,6 +17,7 @@ namespace EuchreChampion
 
         public Rectangle screenCenter { get; private set; }
         public Vector2 cardCenter { get; private set; }
+
         public float scale { get { return _viewport.Width / _cardWidth / 10.0f; } }
 
         public Board(Viewport viewport)
@@ -32,7 +33,7 @@ namespace EuchreChampion
             return (position == Position.East || position == Position.West) ? (float)Math.PI / 2.0f : 0f;
         }
 
-        public Rectangle GetDestinationRectangle(Position position)
+        public Rectangle GetDealtPlayedDestination(Position position)
         {
             switch (position)
             {
@@ -57,7 +58,7 @@ namespace EuchreChampion
             }
         }
 
-        public List<Rectangle> GetDestinationRectangles(Position position)
+        public List<Rectangle> GetHandDestinations(Position position)
         {
             var rectangles = new List<Rectangle>();
 

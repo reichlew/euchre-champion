@@ -10,15 +10,9 @@ namespace EuchreChampion
             var players = new List<Player>();
             foreach (var position in Enum.GetValues(typeof(Position)))
             {
-                players.Add(GetPlayer((Position)position));
-
+                players.Add(new Player((Position)position));
             }
             return players;
-        }
-
-        private Player GetPlayer(Position position)
-        {
-            return new Player(position);
         }
     }
 }

@@ -11,15 +11,14 @@ namespace EuchreChampion
         private SpriteBatch _spriteBatch;
         private Board _board;
 
-        private Texture2D title;
-        private List<SpriteFont> fonts;
+        private SpriteFont _font;
 
-        public Drawer(SpriteBatch spriteBatch, Board board, Texture2D title, List<SpriteFont> fonts)
+        public Drawer(SpriteBatch spriteBatch, Board board, SpriteFont font)
         {
             _spriteBatch = spriteBatch;
             _board = board;
-            this.title = title;
-            this.fonts = fonts;
+
+            _font = font;
         }
 
         public void DrawFlippedCard(Card flippedCard)
@@ -31,7 +30,7 @@ namespace EuchreChampion
         {
             if (player.DealtCard != null)
             {
-                var position = _board.GetDestinationRectangle(player.Position);
+                var position = _board.GetDealtPlayedDestination(player.Position);
                 var rotation = _board.GetRotation(player.Position);
 
                 var card = player.DealtCard;
@@ -42,7 +41,7 @@ namespace EuchreChampion
 
         public void DrawHand(Player player)
         {
-            var positions = _board.GetDestinationRectangles(player.Position);
+            var positions = _board.GetHandDestinations(player.Position);
             var rotation = _board.GetRotation(player.Position);
 
             for (int i = 0; i < player.Hand.Count; i++)
@@ -54,7 +53,7 @@ namespace EuchreChampion
 
             if (player.PlayedCard != null)
             {
-                var position = _board.GetDestinationRectangle(player.Position);
+                var position = _board.GetDealtPlayedDestination(player.Position);
 
                 DrawCard(player.PlayedCard.ActiveTexture, position, rotation);
             }
@@ -65,28 +64,18 @@ namespace EuchreChampion
             _spriteBatch.Draw(texture, destination, null, Color.White, rotation, _board.cardCenter, SpriteEffects.None, 0.0f);
         }
 
-        public void DrawScore(Score _score)
+        public void DrawText(string text, Vector2 location, Color color)
         {
-            //throw new NotImplementedException();
+            _spriteBatch.DrawString(_font, text, location, color);
         }
 
-        public void DrawOrderUpDecision()
+        public void DrawDebugInfo(InputManager manager, State state, int dealer, Suit trump, int playerToAct)
         {
-            _spriteBatch.Draw(title, _board.GetOrderUpDecision(), Color.White);
-        }
-
-        public void DrawPickUpDecision()
-        {
-        }
-
-        public void DrawText(string font, string text, Vector2 location, Color color)
-        {
-            _spriteBatch.DrawString(fonts.Last(), text, location, color);
-        }
-
-        public void DrawDebugInfo(InputManager manager)
-        {
-            DrawText(string.Empty, manager.PressedKeys(), new Vector2(0.0f, 0.0f), Color.White);
+            DrawText(manager.PressedKeys(), new Vector2(0.0f, 0.0f), Color.White);
+            DrawText($"STATE: {state}", new Vector2(0.0f, 14.0f), Color.White);
+            DrawText($"DEALER : {(Position)dealer}", new Vector2(0.0f, 28.0f), Color.White);
+            DrawText($"TRUMP: {trump}", new Vector2(0.0f, 42.0f), Color.White);
+            DrawText($"PLAYER TO ACT: {(Position)playerToAct}", new Vector2(0.0f, 56.0f), Color.White);
         }
     }
 }

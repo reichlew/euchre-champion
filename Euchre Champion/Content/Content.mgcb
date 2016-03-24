@@ -651,23 +651,6 @@
 /processorParam:TextureFormat=Color
 /build:Cards/TwoOfSpades.png
 
-#begin EuchreChampion-title.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:TextureFormat=Color
-/build:EuchreChampion-title.png
-
-#begin Gabrielle.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:TextureFormat=Compressed
-/build:Gabrielle.spritefont
-
 #begin Consolas.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
