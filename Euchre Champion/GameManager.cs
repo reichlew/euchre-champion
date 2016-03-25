@@ -10,7 +10,7 @@ namespace EuchreChampion
 {
     public class GameManager
     {
-        private bool SHOW_DEBUG_CONTROLS = true;
+        private bool SHOW_DEBUG_INFO = true;
 
         private List<Card> _cards { get; set; }
         private List<Player> _players { get; set; }
@@ -22,7 +22,7 @@ namespace EuchreChampion
 
         private int _dealerIndex { get; set; }
         private int _playerToAct { get; set; }
-        private Suit _suitLead { get; set; }
+        private Suit _leadSuit { get; set; }
 
         private Score _score { get; set; }
         private DealType _dealType { get; set; }
@@ -54,6 +54,23 @@ namespace EuchreChampion
             _dealer = new Dealer(_cards, _players, _dealType, _dealerIndex);
         }
 
+        private void Initialize()
+        {
+            _score = new Score(0, 0);
+            _state = State.FirstGame;
+        }
+
+        private void LoadUserSettings()
+        {
+            _dealType = DealType.TwoThree;
+        }
+
+        private void SetRandomDealerIndex()
+        {
+            var random = new Random();
+            _dealerIndex = random.Next(0, _players.Count - 1);
+        }
+
         public void Update()
         {
             _inputManager.Update(Keyboard.GetState(), Mouse.GetState(), TouchPanel.GetState());
@@ -66,6 +83,10 @@ namespace EuchreChampion
                         break;
                     }
                 case State.DealerFound:
+                    {
+                        PrepareToDeal();
+                        break;
+                    }
                 case State.Dealing:
                     {
                         DealNext();
@@ -86,80 +107,166 @@ namespace EuchreChampion
                         CheckIfCardChosen();
                         break;
                     }
-                case State.TrumpCalled:
+                case State.Playing:
                     {
 
-                        if (_handOver)
+                        if (!_handOver)
                         {
-                            AwardTrick();
-                            ClearBoard();
-                            if (_roundOver)
-                            {
-                                UpdateScore();
-                                _dealerIndex = (_dealerIndex + 1) % 4;
-                                _playerToAct = (_dealerIndex + 1) % 4;
-                                _players.ForEach(x => x.Tricks = 0);
-                                _state = State.DealerFound;
-                            }
+                            CheckIfCardPlayed();
+                            break;
                         }
                         else
                         {
-                            CheckIfCardPlayed();
+                            AwardTrick();
+                            _players.ForEach(x => x.PlayedCard = null);                            
+                        }
+
+                        if (_roundOver)
+                        {
+                            UpdateScore();
+
+                            _dealerIndex = (_dealerIndex + 1) % 4;
+                            _playerToAct = (_dealerIndex + 1) % 4;
+                            _players.ForEach(x => x.Tricks = 0);
+
+                            if (_score.UserScore >= 10 || _score.OpponentScore >= 10)
+                            {
+                                _state = State.GameOver;
+                            }
+                            else
+                            {
+                                _state = State.DealerFound;
+                            }
                         }
                         break;
                     }
             }
         }
+        
 
-        private void AwardTrick()
+        public void Draw()
         {
-            var playedTrump = _players.Where(x => IsTrump(x.PlayedCard));
+            _spriteBatch.Begin();
 
-            if (playedTrump == null)
+            if (SHOW_DEBUG_INFO)
             {
-                _players.Where(x => x.PlayedCard.Suit == _suitLead).OrderByDescending(x => x.PlayedCard.Value).First().Tricks++;
+                _drawer.DrawDebugInfo(_inputManager, _state, _dealerIndex, _trump, _playerToAct);
+            }
+
+            _drawer.DrawScore(_score);
+
+            if (_flippedCard != null)
+            {
+                _drawer.DrawFlippedCard(_flippedCard);
+            }
+
+            foreach (var player in _players)
+            {
+                if (_state == State.FirstGame || _state == State.DealerFound)
+                {
+                    _drawer.DrawDealtCard(player);
+                }
+                else
+                {
+                    _drawer.DrawHand(player);
+                }
+            }
+
+            _spriteBatch.End();
+        }
+
+        private void GetDealer()
+        {
+            _dealer.DealSingle();
+
+            var player = _players.SingleOrDefault(x => x.DealtCard != null && CardHelper.IsBlackJack(x.DealtCard));
+            if (player != null)
+            {
+                _dealerIndex = _players.IndexOf(player);
+                _playerToAct = (_dealerIndex + 1) % 4;
+
+                _state = State.DealerFound;
+            }
+        }
+
+        private void PrepareToDeal()
+        {
+            _dealer.Reset(_dealerIndex);
+            _players.ForEach(x => x.DealtCard = null);
+            _state = State.Dealing;
+        }
+
+        private void DealNext()
+        {
+            _dealer.DealNext();
+
+            if (_players.All(x => x.Hand.Count == 5))
+            {
+                _state = State.Dealt;
+            }
+        }
+
+        private void FlipCard()
+        {
+            _flippedCard = _dealer.FlipCard();
+            _state = State.CallingTrump;
+        }
+
+        private void GetDecision()
+        {
+            if (_flippedCard != null)
+            {
+                if (_inputManager.IsKeyPressed(Keys.Y))
+                {
+                    _trump = _flippedCard.Suit;
+                    _state = State.ChoosingCard;
+                    _playerToAct = _dealerIndex;
+
+                }
+                else if (_inputManager.IsKeyPressed(Keys.N))
+                {
+                    if (_playerToAct == _dealerIndex)
+                    {
+                        _flippedCard = null;
+                    }
+                    _playerToAct = (_playerToAct + 1) % 4;
+                }
             }
             else
             {
-                
+                if (_inputManager.IsKeyPressed(Keys.N))
+                {
+                    if (_playerToAct == _dealerIndex)
+                    {
+                        return;
+                    }
+                    _playerToAct = (_playerToAct + 1) % 4;
+                }
+                if (_inputManager.IsKeyPressed(Keys.D1))
+                {
+                    _trump = Suit.Clubs;
+                    _state = State.Playing;
+                    _playerToAct = (_dealerIndex + 1) % 4;
+                }
+                else if (_inputManager.IsKeyPressed(Keys.D2))
+                {
+                    _trump = Suit.Diamonds;
+                    _state = State.Playing;
+                    _playerToAct = (_dealerIndex + 1) % 4;
+                }
+                else if (_inputManager.IsKeyPressed(Keys.D3))
+                {
+                    _trump = Suit.Hearts;
+                    _state = State.Playing;
+                    _playerToAct = (_dealerIndex + 1) % 4;
+                }
+                else if (_inputManager.IsKeyPressed(Keys.D4))
+                {
+                    _trump = Suit.Spades;
+                    _state = State.Playing;
+                    _playerToAct = (_dealerIndex + 1) % 4;
+                }
             }
-        }
-
-        private void UpdateScore()
-        {
-
-        }
-
-        private bool IsTrump(Card playedCard)
-        {
-            return playedCard.Suit == _trump || IsLeftBower(playedCard);
-        }
-
-        private bool IsLeftBower(Card playedCard)
-        {
-            return playedCard.Value == CardValue.Jack && playedCard.Suit == OppositeSuit(_trump);
-        }
-
-        private Suit OppositeSuit(Suit suit)
-        {
-            switch (suit)
-            {
-                case Suit.Clubs:
-                    return Suit.Spades;
-                case Suit.Spades:
-                    return Suit.Clubs;
-                case Suit.Diamonds:
-                    return Suit.Hearts;
-                case Suit.Hearts:
-                    return Suit.Diamonds;
-                default:
-                    throw new Exception($"{suit} is not a valid Suit.");
-            }
-        }
-
-        private void ClearBoard()
-        {
-            _players.ForEach(x => x.PlayedCard = null);
         }
 
         private void CheckIfCardPlayed()
@@ -196,7 +303,7 @@ namespace EuchreChampion
 
             if (_leading)
             {
-                _suitLead = chosenCard.Suit;
+                _leadSuit = chosenCard.Suit;
             }
         }
 
@@ -228,144 +335,47 @@ namespace EuchreChampion
         {
             _players[_playerToAct].Hand[index] = _flippedCard;
             _flippedCard = null;
-            _state = State.TrumpCalled;
+            _state = State.Playing;
             _playerToAct = (_dealerIndex + 1) % 4;
         }
 
-        private void GetDecision()
+        private void AwardTrick()
         {
-            if (_flippedCard != null)
-            {
-                if (_inputManager.IsKeyPressed(Keys.Y))
-                {
-                    _trump = _flippedCard.Suit;
-                    _state = State.ChoosingCard;
-                    _playerToAct = _dealerIndex;
+            var winningCard = CardHelper.GetWinningCard(_players.Select(x => x.PlayedCard), _trump, _leadSuit);
 
-                }
-                else if (_inputManager.IsKeyPressed(Keys.N))
+            var winner = _players.Single(x => x.PlayedCard == winningCard);
+            winner.Tricks++;
+            _playerToAct = _players.IndexOf(winner);
+        }
+
+        private void UpdateScore()
+        {
+            var userTricks = _players.Where(x => x.Position == Position.North || x.Position == Position.South).Sum(x => x.Tricks);
+
+            if (userTricks > 2)
+            {
+                if (userTricks == 5)
                 {
-                    if (_playerToAct == _dealerIndex)
-                    {
-                        _flippedCard = null;
-                    }
-                    _playerToAct = (_playerToAct + 1) % 4;
+                    _score.UserScore += 2;
+                }
+                else
+                {
+                    _score.UserScore += 1;
                 }
             }
             else
             {
-                if (_inputManager.IsKeyPressed(Keys.N))
-                {
-                    if (_playerToAct == _dealerIndex)
-                    {
-                        return;
-                    }
-                    _playerToAct = (_playerToAct + 1) % 4;
-                }
-                if (_inputManager.IsKeyPressed(Keys.D1))
-                {
-                    _trump = Suit.Clubs;
-                    _state = State.TrumpCalled;
-                    _playerToAct = (_dealerIndex + 1) % 4;
-                }
-                else if (_inputManager.IsKeyPressed(Keys.D2))
-                {
-                    _trump = Suit.Diamonds;
-                    _state = State.TrumpCalled;
-                    _playerToAct = (_dealerIndex + 1) % 4;
-                }
-                else if (_inputManager.IsKeyPressed(Keys.D3))
-                {
-                    _trump = Suit.Hearts;
-                    _state = State.TrumpCalled;
-                    _playerToAct = (_dealerIndex + 1) % 4;
-                }
-                else if (_inputManager.IsKeyPressed(Keys.D4))
-                {
-                    _trump = Suit.Spades;
-                    _state = State.TrumpCalled;
-                    _playerToAct = (_dealerIndex + 1) % 4;
-                }
-            }
-        }
+                var opponentTricks = _players.Where(x => x.Position == Position.East || x.Position == Position.West).Sum(x => x.Tricks);
 
-        public void Draw()
-        {
-            _spriteBatch.Begin();
-
-            if (SHOW_DEBUG_CONTROLS)
-            {
-                _drawer.DrawDebugInfo(_inputManager, _state, _dealerIndex, _trump, _playerToAct);
-            }
-
-            foreach (var player in _players)
-            {
-                if (_state == State.FirstGame || _state == State.DealerFound)
+                if (opponentTricks == 5)
                 {
-                    _drawer.DrawDealtCard(player);
+                    _score.OpponentScore += 2;
                 }
                 else
                 {
-                    _drawer.DrawHand(player);
+                    _score.OpponentScore += 1;
                 }
             }
-
-            if (_flippedCard != null)
-            {
-                _drawer.DrawFlippedCard(_flippedCard);
-            }
-
-            _spriteBatch.End();
-        }
-
-        private void Initialize()
-        {
-            _score = new Score(0, 0);
-            _state = State.FirstGame;
-        }
-
-        private void LoadUserSettings()
-        {
-            _dealType = DealType.TwoThree;
-        }
-
-        private void SetRandomDealerIndex()
-        {
-            var random = new Random();
-            _dealerIndex = random.Next(0, _players.Count - 1);
-        }
-
-        private void DealNext()
-        {
-            if (_state == State.DealerFound)
-            {
-                _dealer.Reset(_dealerIndex);
-                _state = State.Dealing;
-            }
-
-            if (_dealer.DealNext())
-            {
-                _state = State.Dealt;
-            }
-        }
-
-        private void GetDealer()
-        {
-            _dealer.DealSingle();
-
-            var player = _players.SingleOrDefault(x => x.DealtCard != null && x.DealtCard.IsBlackJack);
-            if (player != null)
-            {
-                _dealerIndex = _players.IndexOf(player);
-                _state = State.DealerFound;
-                _playerToAct = (_dealerIndex + 1) % 4;
-            }
-        }
-
-        private void FlipCard()
-        {
-            _flippedCard = _dealer.FlipCard();
-            _state = State.CallingTrump;
         }
 
         private void HandleClick(Point location)

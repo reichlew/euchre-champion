@@ -11,9 +11,7 @@ namespace EuchreChampion
 
         public bool IsFaceUp { get; set; }
         public Texture2D ActiveTexture { get { return IsFaceUp ? Front : Back; } }
-
-        public bool IsBlackJack { get { return (Suit == Suit.Clubs || Suit == Suit.Spades) && Value == CardValue.Jack; } }
-
+        
         public Card(Texture2D front, Texture2D back, Suit suit, CardValue value)
         {
             Front = front;

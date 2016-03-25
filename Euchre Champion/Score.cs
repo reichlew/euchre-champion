@@ -2,13 +2,13 @@
 {
     public class Score
     {
-        public int _playerScore;
-        public int _opponentScore;
+        public int UserScore;
+        public int OpponentScore;
 
-        public Score(int playerScore, int opponentScore)
+        public Score(int userScore, int opponentScore)
         {
-            _playerScore = playerScore;
-            _opponentScore = opponentScore;
+            UserScore = userScore;
+            OpponentScore = opponentScore;
         }
     }
 }

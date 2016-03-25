@@ -54,6 +54,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Card.cs" />
+    <Compile Include="CardHelper.cs" />
     <Compile Include="ContentLoader.cs" />
     <Compile Include="Dealer.cs" />
     <Compile Include="Drawer.cs" />

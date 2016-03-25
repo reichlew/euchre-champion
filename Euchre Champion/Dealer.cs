@@ -10,10 +10,10 @@ namespace EuchreChampion
         private DealType _dealType { get; set; }
 
         private List<Card> _activeDeck { get; set; }
-        private int _dealer { get; set; }
+        private int _dealerIndex { get; set; }
         private int _step { get; set; }
 
-        private int _nextPlayer { get { return (_dealer + _step + 1) % 4; } }
+        private int _nextPlayer { get { return (_dealerIndex + _step + 1) % 4; } }
 
         public Dealer(List<Card> cards, List<Player> players, DealType dealType, int dealerIndex)
         {
@@ -29,13 +29,7 @@ namespace EuchreChampion
             _activeDeck = _fullDeck.Shuffle().ToList();
             _step = 0;
 
-            foreach(var player in _players)
-            {
-                player.Hand = new List<Card>();
-                player.DealtCard = null;
-            }
-
-            _dealer = dealerIndex;
+            _dealerIndex = dealerIndex;
         }
 
         public void DealSingle()
@@ -46,21 +40,12 @@ namespace EuchreChampion
             _step++;
         }
 
-        public bool DealNext()
+        public void DealNext()
         {
             var numCards = NumCardsToDeal();
             _players[_nextPlayer].Hand.AddRange(_activeDeck.Take(numCards));
             _activeDeck.RemoveRange(0, numCards);
-
-            if (_step == 7)
-            {
-                return true;
-            }
-            else
-            {
                 _step++;
-                return false;
-            }
         }
 
         public Card FlipCard()

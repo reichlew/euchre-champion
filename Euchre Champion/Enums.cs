@@ -42,7 +42,8 @@
         Dealt,
         CallingTrump,
         ChoosingCard,
-        TrumpCalled,
-        HandOver
+        Playing,
+        HandOver,
+        GameOver
     }
 }

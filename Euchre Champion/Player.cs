@@ -13,6 +13,7 @@ namespace EuchreChampion
         public Player(Position position)
         {
             Position = position;
+            Hand = new List<Card>();
         }
     }
 }
