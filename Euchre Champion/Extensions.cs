@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace EuchreChampion
 {
     public static class Extensions
     {
+        public static int NextPlayer(this int index)
+        {
+            return (index + 1) % 4;
+        }
+
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
         {
             Random random = new Random();
@@ -17,6 +21,6 @@ namespace EuchreChampion
                 yield return elements[swapIndex];
                 elements[swapIndex] = elements[i];
             }
-        }        
+        }
     }
 }

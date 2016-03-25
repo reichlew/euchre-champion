@@ -21,13 +21,14 @@ namespace EuchreChampion
             {
                 return rightBower;
             }
+
             var leftBower = trumpCards.SingleOrDefault(x => IsLeftBower(x, trump));
 
             if (leftBower != null)
             {
                 return leftBower;
             }
-
+            
             return trumpCards.OrderByDescending(x => x.Value).First();
         }
 

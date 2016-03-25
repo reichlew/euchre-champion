@@ -29,9 +29,7 @@
     public enum DealType
     {
         TwoThree,
-        ThreeTwo,
-        OneFour,
-        FourOne
+        ThreeTwo
     }
 
     public enum State

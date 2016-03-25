@@ -12,7 +12,6 @@ namespace EuchreChampion
     {
         private bool SHOW_DEBUG_INFO = true;
 
-        private List<Card> _cards { get; set; }
         private List<Player> _players { get; set; }
         private SpriteBatch _spriteBatch { get; set; }
         private Board _board { get; set; }
@@ -32,13 +31,12 @@ namespace EuchreChampion
 
         private bool _handOver { get { return _players.All(x => x.PlayedCard != null); } }
         private bool _roundOver { get { return _players.All(x => !x.Hand.Any()); } }
-
-        private bool _leading { get { return _handOver; } }
+        private bool _leading { get { return _players.All(x => x.PlayedCard == null); } }
+        private bool _userCalledTrump { get; set; }
 
         public GameManager(SpriteBatch spriteBatch, List<Card> cards, List<Player> players, Board board, SpriteFont font, InputManager inputManager)
         {
             _spriteBatch = spriteBatch;
-            _cards = cards;
             _players = players;
             _board = board;
             _inputManager = inputManager;
@@ -51,7 +49,7 @@ namespace EuchreChampion
 
             SetRandomDealerIndex();
 
-            _dealer = new Dealer(_cards, _players, _dealType, _dealerIndex);
+            _dealer = new Dealer(cards, _players, _dealType, _dealerIndex);
         }
 
         private void Initialize()
@@ -118,15 +116,15 @@ namespace EuchreChampion
                         else
                         {
                             AwardTrick();
-                            _players.ForEach(x => x.PlayedCard = null);                            
+                            _players.ForEach(x => x.PlayedCard = null);
                         }
 
                         if (_roundOver)
                         {
                             UpdateScore();
 
-                            _dealerIndex = (_dealerIndex + 1) % 4;
-                            _playerToAct = (_dealerIndex + 1) % 4;
+                            _dealerIndex = _dealerIndex.NextPlayer();
+                            _playerToAct = _dealerIndex.NextPlayer();
                             _players.ForEach(x => x.Tricks = 0);
 
                             if (_score.UserScore >= 10 || _score.OpponentScore >= 10)
@@ -142,7 +140,7 @@ namespace EuchreChampion
                     }
             }
         }
-        
+
 
         public void Draw()
         {
@@ -183,7 +181,7 @@ namespace EuchreChampion
             if (player != null)
             {
                 _dealerIndex = _players.IndexOf(player);
-                _playerToAct = (_dealerIndex + 1) % 4;
+                _playerToAct = _dealerIndex.NextPlayer();
 
                 _state = State.DealerFound;
             }
@@ -221,6 +219,7 @@ namespace EuchreChampion
                     _trump = _flippedCard.Suit;
                     _state = State.ChoosingCard;
                     _playerToAct = _dealerIndex;
+                    _userCalledTrump = IsUserTeam(_players[_playerToAct].Position);
 
                 }
                 else if (_inputManager.IsKeyPressed(Keys.N))
@@ -229,7 +228,7 @@ namespace EuchreChampion
                     {
                         _flippedCard = null;
                     }
-                    _playerToAct = (_playerToAct + 1) % 4;
+                    _playerToAct = _playerToAct.NextPlayer();
                 }
             }
             else
@@ -240,33 +239,42 @@ namespace EuchreChampion
                     {
                         return;
                     }
-                    _playerToAct = (_playerToAct + 1) % 4;
+                    _playerToAct = _playerToAct.NextPlayer();
                 }
                 if (_inputManager.IsKeyPressed(Keys.D1))
                 {
                     _trump = Suit.Clubs;
                     _state = State.Playing;
-                    _playerToAct = (_dealerIndex + 1) % 4;
+                    _userCalledTrump = IsUserTeam(_players[_playerToAct].Position);
+                    _playerToAct = _dealerIndex.NextPlayer();
                 }
                 else if (_inputManager.IsKeyPressed(Keys.D2))
                 {
                     _trump = Suit.Diamonds;
                     _state = State.Playing;
-                    _playerToAct = (_dealerIndex + 1) % 4;
+                    _userCalledTrump = IsUserTeam(_players[_playerToAct].Position);
+                    _playerToAct = _dealerIndex.NextPlayer();
                 }
                 else if (_inputManager.IsKeyPressed(Keys.D3))
                 {
                     _trump = Suit.Hearts;
                     _state = State.Playing;
-                    _playerToAct = (_dealerIndex + 1) % 4;
+                    _userCalledTrump = IsUserTeam(_players[_playerToAct].Position);
+                    _playerToAct = _dealerIndex.NextPlayer();
                 }
                 else if (_inputManager.IsKeyPressed(Keys.D4))
                 {
                     _trump = Suit.Spades;
                     _state = State.Playing;
-                    _playerToAct = (_dealerIndex + 1) % 4;
+                    _userCalledTrump = IsUserTeam(_players[_playerToAct].Position);
+                    _playerToAct = _dealerIndex.NextPlayer();
                 }
             }
+        }
+
+        private bool IsUserTeam(Position position)
+        {
+            return position == Position.North || position == Position.South;
         }
 
         private void CheckIfCardPlayed()
@@ -296,15 +304,16 @@ namespace EuchreChampion
         private void PlayCard(int index)
         {
             var chosenCard = _players[_playerToAct].Hand[index];
-            _players[_playerToAct].PlayedCard = chosenCard;
-            _players[_playerToAct].Hand.RemoveAt(index);
-
-            _playerToAct = (_playerToAct + 1) % 4;
 
             if (_leading)
             {
                 _leadSuit = chosenCard.Suit;
             }
+
+            _players[_playerToAct].PlayedCard = chosenCard;
+            _players[_playerToAct].Hand.RemoveAt(index);
+
+            _playerToAct = _playerToAct.NextPlayer();
         }
 
         private void CheckIfCardChosen()
@@ -336,7 +345,7 @@ namespace EuchreChampion
             _players[_playerToAct].Hand[index] = _flippedCard;
             _flippedCard = null;
             _state = State.Playing;
-            _playerToAct = (_dealerIndex + 1) % 4;
+            _playerToAct = _dealerIndex.NextPlayer();
         }
 
         private void AwardTrick()
@@ -349,8 +358,9 @@ namespace EuchreChampion
         }
 
         private void UpdateScore()
-        {
+        {            
             var userTricks = _players.Where(x => x.Position == Position.North || x.Position == Position.South).Sum(x => x.Tricks);
+
 
             if (userTricks > 2)
             {
@@ -360,7 +370,12 @@ namespace EuchreChampion
                 }
                 else
                 {
-                    _score.UserScore += 1;
+                    _score.UserScore++;
+
+                    if (!_userCalledTrump)
+                    {
+                        _score.UserScore++;
+                    }
                 }
             }
             else
@@ -374,6 +389,11 @@ namespace EuchreChampion
                 else
                 {
                     _score.OpponentScore += 1;
+
+                    if (_userCalledTrump)
+                    {
+                        _score.OpponentScore++;
+                    }
                 }
             }
         }
