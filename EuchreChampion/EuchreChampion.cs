@@ -10,8 +10,11 @@ namespace EuchreChampion
     public class EuchreChampion : Game
     {
         private GraphicsDeviceManager _graphics;
+        private SpriteBatch _spriteBatch;
 
         private GameManager _game;
+        private ContentLoader _contentLoader;
+        private PlayerFactory _playerFactory;
         private InputManager _inputManager;
 
         public EuchreChampion()
@@ -35,6 +38,9 @@ namespace EuchreChampion
 
             _inputManager = new InputManager();
 
+            _contentLoader = new ContentLoader(Content);
+            _playerFactory = new PlayerFactory();
+
             base.Initialize();
         }
 
@@ -44,18 +50,16 @@ namespace EuchreChampion
         /// </summary>
         protected override void LoadContent()
         {
-            var spriteBatch = new SpriteBatch(_graphics.GraphicsDevice);            
+            _spriteBatch = new SpriteBatch(_graphics.GraphicsDevice); 
 
-            var loader = new ContentLoader(Content);
-            var font = loader.LoadFont();
-            var cards = loader.LoadCards();
+            var drawer = new Drawer(_spriteBatch, new Board(_graphics.GraphicsDevice.Viewport), _contentLoader.LoadFont());
+            
+            var players = _playerFactory.GetPlayers();
+            
+            var dealer = new Dealer(_contentLoader.LoadCards(), players, DealType.TwoThree);
 
-            var factory = new PlayerFactory();
-            var players = factory.GetPlayers();
-
-            var board = new Board(_graphics.GraphicsDevice.Viewport);            
-
-            _game = new GameManager(spriteBatch, cards, players, board, font, _inputManager);     
+            _game = new GameManager(players, dealer, drawer, _inputManager);  
+            
         }
 
         /// <summary>
@@ -92,7 +96,11 @@ namespace EuchreChampion
         {
             GraphicsDevice.Clear(Color.DarkGreen);
 
-            _game.Draw();            
+            _spriteBatch.Begin();
+
+            _game.Draw();
+
+            _spriteBatch.End();
 
             base.Draw(gameTime);
         }

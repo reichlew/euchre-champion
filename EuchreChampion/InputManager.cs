@@ -28,6 +28,11 @@ namespace EuchreChampion
             _currentTouchState = touchState;
         }
 
+        public bool IsKeyDown(Keys key)
+        {
+            return _currentKeyboardState.IsKeyDown(key);
+        }
+
         public bool IsKeyPressed(Keys key)
         {
             return _currentKeyboardState.IsKeyDown(key) && _previousKeyboardState.IsKeyUp(key);

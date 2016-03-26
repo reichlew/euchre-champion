@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace EuchreChampion
@@ -21,19 +22,19 @@ namespace EuchreChampion
         private int _playerToDealTo { get; set; }
         private int _step { get; set; }
 
-        public Dealer(List<Card> cards, List<Player> players, DealType dealType, int dealerIndex)
+        public Dealer(List<Card> cards, List<Player> players, DealType dealType)
         {
             _fullDeck = cards;
             _players = players;
             _dealType = dealType;
 
-            Reset(dealerIndex);
+            SetRandomDealerIndex();
+            Reset(_dealerIndex);
         }
 
         public void Reset(int dealerIndex)
         {
             _activeDeck = _fullDeck.Shuffle().ToList();
-
             _dealerIndex = dealerIndex;
             _playerToDealTo = _dealerIndex.NextPlayer();
             _step = 0;
@@ -58,11 +59,17 @@ namespace EuchreChampion
             _step++;
         }
 
-        public Card FlipCard()
+        public Card GetTopCard()
         {
             var card = _activeDeck.First();
             _activeDeck.Remove(card);
             return card;
+        }
+
+        private void SetRandomDealerIndex()
+        {
+            var random = new Random();
+            _dealerIndex = random.Next(0, _players.Count - 1);
         }
     }
 }

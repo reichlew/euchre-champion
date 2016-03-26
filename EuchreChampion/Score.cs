@@ -2,8 +2,8 @@
 {
     public class Score
     {
-        public int UserScore;
-        public int OpponentScore;
+        public int UserScore { get; set; }
+        public int OpponentScore { get; set; }
 
         public Score(int userScore, int opponentScore)
         {

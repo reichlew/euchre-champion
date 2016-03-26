@@ -6,6 +6,32 @@ namespace EuchreChampion
 {
     public static class CardHelper
     {
+        public static bool CanPlayCard(Card card, IEnumerable<Card> restOfHand, Suit trump, Suit leadSuit)
+        {
+            if (leadSuit == trump)
+            {
+                if (IsTrump(card, trump))
+                {
+                    return true;
+                }
+                else
+                {
+                    return !restOfHand.Any(x => IsTrump(x, trump));
+                }
+            }
+            else
+            {
+                if (card.Suit == leadSuit && !IsLeftBower(card, trump))
+                {
+                    return true;
+                }
+                else
+                {
+                    return !restOfHand.Any(x => x.Suit == leadSuit && !IsLeftBower(x, trump));
+                }
+            }
+        }
+
         public static Card GetWinningCard(IEnumerable<Card> cards, Suit trump, Suit leadSuit)
         {
             var trumpCards = cards.Where(x => IsTrump(x, trump));
@@ -47,12 +73,12 @@ namespace EuchreChampion
             return card.Suit == trump && card.Value == CardValue.Jack;
         }
 
-        private static bool IsLeftBower(Card card, Suit trump)
+        public static bool IsLeftBower(Card card, Suit trump)
         {
-            return card.Value == CardValue.Jack && card.Suit == GetOppositeSuit(trump);
+            return card.Value == CardValue.Jack && card.Suit == OppositeSuit(trump);
         }
 
-        private static Suit GetOppositeSuit(Suit suit)
+        public static Suit OppositeSuit(Suit suit)
         {
             switch (suit)
             {

@@ -27,7 +27,6 @@ namespace EuchreChampion
                     var cardLocation = $"Cards\\{value}Of{suit}";
                     var front = _content.Load<Texture2D>(cardLocation);
                     var card = new Card(front, back, (Suit)suit, (CardValue)value);
-                    card.IsFaceUp = true;
                     cards.Add(card);
                 }
             }

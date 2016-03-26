@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace EuchreChampion
@@ -41,7 +38,7 @@ namespace EuchreChampion
 
                 var card = player.DealtCard;
 
-                DrawCard(card.ActiveTexture, position, rotation);
+                DrawCard(card.Front, position, rotation);
             }
         }
 
@@ -54,14 +51,14 @@ namespace EuchreChampion
             {
                 var card = player.Hand[i];
 
-                DrawCard(card.ActiveTexture, positions[i], rotation);
+                DrawCard(card.Front, positions[i], rotation);
             }
 
             if (player.PlayedCard != null)
             {
                 var position = _board.GetDealtCardDestination(player.Position);
 
-                DrawCard(player.PlayedCard.ActiveTexture, position, rotation);
+                DrawCard(player.PlayedCard.Front, position, rotation);
             }
         }
 
@@ -75,7 +72,7 @@ namespace EuchreChampion
             _spriteBatch.DrawString(_font, text, location, color);
         }
 
-        public void DrawDebugInfo(InputManager manager, State state, int dealer, Suit trump, int playerToAct)
+        public void DrawDebugInfo(InputManager manager, State state, int dealer, Suit? trump, int playerToAct)
         {
             DrawText(manager.PressedKeys(), new Vector2(0.0f, 0.0f), Color.White);
             DrawText($"STATE: {state}", new Vector2(0.0f, 14.0f), Color.White);
